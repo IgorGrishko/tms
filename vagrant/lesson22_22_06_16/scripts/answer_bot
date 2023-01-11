@@ -1,0 +1,38 @@
+#!/usr/bin/expect -f
+
+# Open an an answer file for user input
+set f [open ./files/cert_info_file.txt]
+#puts "Reading values from file..."
+
+# Inpup 7 vars for answers from from cert_info_file.txt
+for {set numb 1 } {$numb <= 7} {incr numb} {
+  set line [split [gets $f]]
+  #puts "ANS$numb = '$line'"
+  set ANS$numb "$line"
+}
+
+# Run cert creation command
+spawn ./ssl_create.sh
+expect -exact "Country Name (2 letter code) \[XX\]:"
+send -- "$ANS1\r"
+#sleep 2
+expect -exact "State or Province Name (full name) \[\]:"
+send -- "$ANS2\r"
+#sleep 2
+expect -exact "Locality Name (eg, city) \[Default City\]:"
+send -- "$ANS3\r"
+#sleep 2
+expect -exact "Organization Name (eg, company) \[Default Company Ltd\]:"
+send -- "$ANS4\r"
+#sleep 2
+expect -exact "Organizational Unit Name (eg, section) \[\]:"
+send -- "$ANS5\r"
+#sleep 2
+expect -exact "Common Name (eg, your name or your server's hostname) \[\]:"
+send -- "$ANS6\r"
+#sleep 2
+expect -exact "Email Address \[\]:"
+send -- "$ANS7\r"
+#sleep 2
+
+expect eof
