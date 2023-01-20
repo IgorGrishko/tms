@@ -1,0 +1,26 @@
+ENV["VAGRANT_EXPERIMENTAL"] = "disks"
+
+Vagrant.configure("2") do |config|
+  config.vm.define "centos" do |centos|
+    centos.vm.box = "centos/7"
+    centos.vm.box_check_update = true
+    centos.vm.box_url = "centos/7"
+    centos.vm.hostname = 'centos'
+    centos.vm.network :private_network, ip: "192.168.56.90"
+    centos.vm.provider :virtualbox
+    
+    # use loop to add required number of disks to vm
+    (0..1).each do |i|
+      centos.vm.disk :disk, size: "500MB", name: "add_volume_#{i}"
+    end
+    centos.vm.provider :virtualbox do |v|
+      v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+      v.customize ["modifyvm", :id, "--memory", 1024]
+      v.customize ["modifyvm", :id, "--cpus", 2]
+      v.customize ["modifyvm", :id, "--name", "centos"]
+    end
+
+    #centos.vm.provision "shell", path: "scripts/setup_ssh.sh" # Script used to configure local ssh access to vagrant vm and not required for the task
+    centos.vm.provision "shell", path: "scripts/setup_volume.sh"
+  end
+end
