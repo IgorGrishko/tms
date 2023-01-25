@@ -1,0 +1,6 @@
+# apps to deploy
+apps/*
+# lesson30_22_07_28 (python)
+builds/*
+python/lesson30_22_07_28/.vagrant
+python/lesson30_22_07_28/ubuntu-*

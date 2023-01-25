@@ -1,0 +1,35 @@
+Vagrant.configure("2") do |config|
+    #-TMS-LESSON30-PYTHON-DEV-ENVIRONMENT---------------------------------------------
+    config.vm.define "dev" do |ubuntu|
+      ubuntu.vm.box = "ubuntu/bionic64"
+      ubuntu.vm.box_url = "ubuntu/bionic64"
+      ubuntu.vm.hostname = 'dev'
+      ubuntu.vm.network :private_network, ip: "192.168.56.211"
+    
+      ubuntu.vm.provider :virtualbox do |v|
+        v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+        v.customize ["modifyvm", :id, "--memory", 1024]
+        v.customize ["modifyvm", :id, "--cpus", 1]
+        v.customize ["modifyvm", :id, "--name", "lesson30-dev"]
+      end
+      ubuntu.vm.synced_folder "E:/Projects/Git/tms/builds", "/tmp/builds"
+      ubuntu.vm.provision "docker"
+    end
+    #-TMS-LESSON30-PYTHON-PROD-ENVIRONMENT--------------------------------------------
+    config.vm.define "prod" do |ubuntu|
+      ubuntu.vm.box = "ubuntu/bionic64"
+      ubuntu.vm.box_url = "ubuntu/bionic64"
+      ubuntu.vm.hostname = 'prod'
+      ubuntu.vm.network :private_network, ip: "192.168.56.233"
+  
+      ubuntu.vm.provider :virtualbox do |v|
+        v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+        v.customize ["modifyvm", :id, "--memory", 1024]
+        v.customize ["modifyvm", :id, "--cpus", 1]
+        v.customize ["modifyvm", :id, "--name", "lesson30-prod"]
+      end
+      ubuntu.vm.synced_folder "E:/Projects/Git/tms/builds", "/tmp/builds"
+      ubuntu.vm.provision "docker"
+    end
+    #---------------------------------------------------------------------------------
+  end
