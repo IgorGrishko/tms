@@ -1,0 +1,32 @@
+require 'vagrant-aws'
+
+# taken from https://github.com/ruby-i18n/i18n/blob/741add9dba3fe8189454f47c5774b45211ab11a9/lib/i18n/core_ext/hash.rb
+class Hash
+  def slice(*keep_keys)
+    h = {}
+    keep_keys.each { |key| h[key] = fetch(key) if has_key?(key) }
+    h
+  end unless Hash.method_defined?(:slice)
+
+  def except(*less_keys)
+    slice(*keys - less_keys)
+  end unless Hash.method_defined?(:except)
+end
+
+Vagrant.configure('2') do |config|
+  #-AWS-DEPLOY--------------------------------------------------------------------
+  config.vm.box = 'aws-dummy'
+  config.vm.provider 'aws' do |aws, override|
+    override.vm.synced_folder ".", "/vagrant", disabled: true
+    aws.access_key_id = ENV['AWS_ACCESS_KEY_ID'] # add creds into environment variables or use aws creds from C:\Users\UserName\.aws\credentials
+    aws.secret_access_key = ENV['AWS_SECRET_ACCESS_KEY'] # add creds into environment variables or use aws creds from C:\Users\UserName\.aws\credentials
+    aws.keypair_name = 'sshKeyName' # ssh key to access aws portal
+    aws.region = 'us-east-1'
+    aws.instance_type = 't2.micro'
+    aws.security_groups = ['awsGroupName'] # group created at aws portal
+    aws.ami = 'ami-05fa00d4c63e32376'
+    aws.tags = {'Name' => 'vagrant-vm'}
+    override.ssh.username = 'username'
+    override.ssh.private_key_path = '~/.ssh/id_ed25519.pub'
+  end
+end
