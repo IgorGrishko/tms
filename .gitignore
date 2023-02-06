@@ -1,6 +1,28 @@
 # apps to deploy
 apps/*
+
 # lesson30_22_07_28 (python)
 builds/*
 python/lesson30_22_07_28/.vagrant
 python/lesson30_22_07_28/ubuntu-*
+
+# lesson45_22_10_10 (terrraform)
+terraform/lesson45_22_10_10/backend/.terraform
+terraform/lesson45_22_10_10/backend/.terraform.lock.hcl
+terraform/lesson45_22_10_10/backend/terraform.tfstate
+terraform/lesson45_22_10_10/backend/terraform.tfstate.backup
+
+terraform/lesson45_22_10_10/db/.terraform
+terraform/lesson45_22_10_10/db/.terraform.lock.hcl
+terraform/lesson45_22_10_10/db/terraform.tfstate
+terraform/lesson45_22_10_10/db/terraform.tfstate.backup
+
+terraform/lesson45_22_10_10/instances/.terraform
+terraform/lesson45_22_10_10/instances/.terraform.lock.hcl
+terraform/lesson45_22_10_10/instances/terraform.tfstate
+terraform/lesson45_22_10_10/instances/terraform.tfstate.backup
+
+terraform/lesson45_22_10_10/network/.terraform
+terraform/lesson45_22_10_10/network/.terraform.lock.hcl
+terraform/lesson45_22_10_10/network/terraform.tfstate
+terraform/lesson45_22_10_10/network/terraform.tfstate.backup
