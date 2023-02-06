@@ -1,0 +1,131 @@
+import groovy.json.JsonSlurperClassic
+
+def stagePrepare(apps, parallelExecute) {
+    buildStageList = []
+    buildParallelMap = [:]
+    apps.eachWithIndex {app, value, i ->
+        Integer lock_id = i % parallelExecute
+        println lock_id
+        buildParallelMap.put(app, stageCreate(app, value, lock_id))
+    }
+    buildStageList.add(buildParallelMap)
+    return buildStageList
+}
+
+def stageCreate(app, value, lock_id) {
+    return {
+        stage(app) {
+            lock("Build-Lock-${lock_id}"){
+                dir("${value.path}"){
+                    sh "docker build -t ${app} -f Dockerfile-jenkins-build ."
+                }
+            }
+        }
+    }
+}
+
+pipeline {
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '3'))
+    }
+    agent {
+        label 'master'
+    }
+    stages{
+        stage('Prepare'){
+            steps {
+                script {
+                    Integer parallelExecute = 2
+                    json = readFile "devops/services.json"
+                    apps = new JsonSlurperClassic().parseText(json)
+                    dockerRegistry = "docker.io"
+                    dockerOwner = "igorfrombrest"
+                    buildStage = stagePrepare(apps, parallelExecute)
+                }
+            }
+        }
+        stage('Build') {
+            when { 
+                anyOf {
+                    changeset "**/*.java"
+                    // expression { return !currentBuild.previousCompletedBuild }
+                }
+            }
+            steps {
+                script {
+                    buildStage.each { build ->
+                        parallel build
+                    }
+                }
+            }
+        }
+        stage('Test') {
+            when { 
+                anyOf {
+                    changeset "**/*.java"
+                    // expression { return !currentBuild.previousCompletedBuild }
+                }
+            }
+            steps {
+                script {
+                    apps.keySet().each { app ->
+                        sh "docker run ${app} mvn test"
+                    }
+                }
+            }
+        }
+        stage('Create image') {
+            when { 
+                allOf {
+                    changeset "**/*.java"
+                    // expression { return !currentBuild.previousCompletedBuild }
+                    expression { env.BRANCH_NAME == "dev" || env.BRANCH_NAME == "master" }
+                }
+            }
+            steps {
+                script {
+                    apps.each { app, value ->
+                        dir("${value.path}"){
+                            sh """
+                            mkdir target
+                            docker create --name ${app} ${app}
+                            docker cp ${app}:/app/target/my-app-1.0-SNAPSHOT.jar target/
+                            docker rm -f ${app}
+                            docker rmi -f ${app}
+                            docker build -t ${dockerRegistry}/${dockerOwner}/${app}:${env.BUILD_NUMBER} -f Dockerfile-jenkins-create .
+                            """
+                        }
+                    }
+                }
+            }
+        }
+        stage('Push image') {
+            when { 
+                allOf {
+                    changeset "**/*.java"
+                    // expression { return !currentBuild.previousCompletedBuild }
+                    expression { env.BRANCH_NAME == "dev" || env.BRANCH_NAME == "master" }
+                }
+            }
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub', passwordVariable: 'pass', usernameVariable: 'user')]) {
+                        sh "echo $pass | docker login $dockerRegistry -u $user --password-stdin"
+                    }
+                    apps.keySet().each { app ->
+                        sh """
+                        docker push ${dockerRegistry}/${dockerOwner}/${app}:${env.BUILD_NUMBER}
+                        docker rm -f ${dockerRegistry}/${dockerOwner}/${app}:${env.BUILD_NUMBER}
+                        docker rmi -f ${dockerRegistry}/${dockerOwner}/${app}:${env.BUILD_NUMBER}
+                        """
+                    }
+                }
+            }
+        }
+    }
+    post {
+        always {
+            cleanWs()
+        }
+    }
+}
