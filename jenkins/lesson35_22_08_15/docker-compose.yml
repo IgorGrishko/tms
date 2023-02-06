@@ -1,0 +1,61 @@
+version: '3.9'
+services:
+  jenkins_master:
+    image: jenkins/jenkins:lts
+    container_name: jenkins
+    restart: unless-stopped
+    ports:
+      - 8080:8080
+      - 50000:50000
+    volumes:
+      - jenkins_server:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /usr/bin/docker:/usr/bin/docker
+      - /usr/local/bin/docker-compose:/usr/local/bin/docker-compose
+    networks:
+      - jenkins_network
+  jenkins_dev:
+    image: jenkins/inbound-agent
+    container_name: jenkins-dev
+    privileged: true
+    restart: unless-stopped
+    environment:
+      JENKINS_URL: http://jenkins:8080
+      JENKINS_SECRET:
+      JENKINS_AGENT_NAME: dev
+      JENKINS_AGENT_WORKDIR: /home/jenkins/agent
+    volumes:
+      - server_dev:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /usr/bin/docker:/usr/bin/docker
+      - /usr/local/bin/docker-compose:/usr/local/bin/docker-compose
+    networks:
+      - jenkins_network
+  jenkins_prod:
+    image: jenkins/inbound-agent
+    container_name: jenkins-prod
+    privileged: true
+    restart: unless-stopped
+    environment:
+      JENKINS_URL: http://jenkins:8080
+      JENKINS_SECRET:
+      JENKINS_AGENT_NAME: prod
+      JENKINS_AGENT_WORKDIR: /home/jenkins/agent
+    volumes:
+      - server_prod:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /usr/bin/docker:/usr/bin/docker
+      - /usr/local/bin/docker-compose:/usr/local/bin/docker-compose
+    networks:
+      - jenkins_network
+
+volumes:
+  jenkins_server:
+    external: false
+  server_dev:
+    external: false
+  server_prod:
+    external: false
+      
+networks:
+  jenkins_network:

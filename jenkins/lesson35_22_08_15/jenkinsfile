@@ -1,0 +1,42 @@
+import groovy.json.JsonSlurperClassic
+def orgName = 'dos09-onl'
+def apps = ['hello-jenkins-app:5', 'hello-world-app:5', 'hello-python-app:5']
+
+pipeline {
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '2'))
+    }
+    parameters {
+        choice(
+            choices: ['dev', 'prod'],
+            description: 'Select environmet',
+            name: 'environmet'
+        )
+    }
+    agent {
+       label "${params.environmet}"
+    }
+    stages {
+        stage ('Authentication'){
+            steps{
+                withCredentials([usernamePassword(credentialsId: 'lesson35-pat', passwordVariable: 'pass', usernameVariable: 'user')]) {
+                    script {
+                        registry = 'ghcr.io'
+                        sh "echo $pass | docker login -u $user --password-stdin $registry"
+                    }
+                }
+            }   
+        }
+        stage('Deployment') {
+            steps {
+                script{
+                    apps.each { app ->
+                    sh "docker pull $registry/$orgName/${app}"
+                    sh "docker run -d $registry/$orgName/${app}"
+                    echo "app ${app} deplpyed in ${params.environmet} environmet"
+                    }
+                }
+            }
+        }
+    }
+}
