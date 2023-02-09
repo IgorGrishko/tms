@@ -1,0 +1,17 @@
+---
+- name: Install apache and nginx
+  ansible.builtin.package:
+    name: '{{ item }}'
+    state: latest
+  loop: '{{ packages }}'
+  when:
+    - ansible_facts['os_family'] == 'Debian'
+
+- name: Install apache and nginx
+  ansible.builtin.package:
+    name: '{{ item }}'
+    state: latest
+  loop: '{{ packages_cent }}'
+  when:
+    - ansible_facts['distribution'] == 'CentOS'
+...

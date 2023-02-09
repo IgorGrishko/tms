@@ -1,0 +1,8 @@
+packages:
+  - apache2
+  - nginx
+  
+packages_cent:
+  - httpd
+  - nginx
+...

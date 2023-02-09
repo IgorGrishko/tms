@@ -1,0 +1,8 @@
+---
+- name: Lesson 20 hometask
+  hosts: webservers
+  become: true
+
+  roles:
+    - lesson20_22_06_06
+...

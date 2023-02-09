@@ -1,0 +1,61 @@
+---
+- name: Create folders
+  ansible.builtin.file:
+    path: /opt/{{ item }}
+    owner: vagrant
+    state: directory
+    group: vagrant
+    mode: '0775'
+  loop: '{{ packages }}'
+
+- name: Create .txt file
+  copy:
+    dest: "/opt/{{ item }}/test.txt"
+    content:
+      Test file>
+  loop: '{{ packages }}'
+
+- name: Copy .html file
+  ansible.builtin.copy:
+    src: /home/vagrant/ansible/roles/lesson20_22_06_06/files/test.html
+    dest: "/opt/{{ item }}/test.html"
+    owner: vagrant
+    group: vagrant
+    mode: '0664'
+  loop: '{{ packages }}'
+
+- name: Copy apache config file
+  ansible.builtin.copy:
+    src: /home/vagrant/ansible/roles/lesson20_22_06_06/files/000-default.conf
+    dest: "/etc/apache2/sites-enabled/000-default.conf"
+    owner: vagrant
+    group: vagrant
+    mode: '0664'
+
+- name: Copy nginx config file
+  ansible.builtin.copy:
+    src: /home/vagrant/ansible/roles/lesson20_22_06_06/files/default
+    dest: "/etc/nginx/sites-enabled/default"
+    owner: vagrant
+    group: vagrant
+    mode: '0664'
+
+- name: Change apache port
+  lineinfile:
+    path: /etc/apache2/ports.conf
+    state: present
+    regexp: '^Listen'
+    line: "Listen 8084\nListen [::]:8084"
+  when:
+    - ansible_facts['os_family'] == 'Debian'
+
+- name: Start service
+  service: name={{ item }} state=started
+  loop: '{{ packages }}'
+
+- name: Enable service
+  ansible.builtin.service:
+    name: '{{ item }}'
+    enabled: true
+  loop: '{{ packages }}'
+...
