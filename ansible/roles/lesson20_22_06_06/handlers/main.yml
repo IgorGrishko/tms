@@ -1,0 +1,8 @@
+---
+- name: System reboot
+  reboot:
+    delay: 10
+    message: "Server is rebooting"
+    state: present
+    when: always
+...
